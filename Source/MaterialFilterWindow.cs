@@ -111,7 +111,9 @@ namespace MaterialFilter
             const float sectionBorder = 1f;
             const float controlsGap = 2f;
             const float searchClearButtonWidth = 24f;
-            string headerText = "MaterialFilter_WindowHeader".Translate();
+            string headerText = string.Format(
+                "{0}",
+                "MaterialFilter_WindowHeader".Translate());
             string searchLabel = "MaterialFilter_SearchLabel".Translate();
 
             // Measure the longest label for layout.
@@ -239,7 +241,7 @@ namespace MaterialFilter
                 bool isAllowed = filter.Allows(sdef);
                 bool prev = isAllowed;
                 Widgets.Checkbox(indent + longestFilterName + padding, curY, ref isAllowed,
-                                 lineHeight, paintable: false, playSound: false);
+                                 lineHeight, false, false);
                 if (Widgets.ButtonInvisible(labelRect))
                 {
                     isAllowed = !prev;
