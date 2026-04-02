@@ -14,7 +14,7 @@ The generated filters are hidden from the vanilla `ThingFilterUI` via a prefix p
 
 ### Filter Window
 
-A custom `MaterialFilterWindow` (subclass of `Window`) displays all material filters as a scrollable checklist with Clear All / Allow All buttons. The window is opened by "Filter>>" buttons injected into three UI locations via postfix patches.
+A custom `MaterialFilterWindow` (subclass of `Window`) displays all material filters as a scrollable checklist with Clear All / Allow All buttons and a search field. The window is opened by injected filter buttons and clamps itself to the visible screen so it stays usable near edges and at different UI scales.
 
 ## Architecture
 
@@ -56,6 +56,7 @@ The original mod created hundreds of `AssemblyBuilder` + `TypeBuilder` instances
 ### Window UI
 - Filter label widths are measured each frame (required since `Text.CalcSize` depends on current font settings) but uses a simple loop with no allocations
 - Scroll view uses indexed for-loop instead of foreach to avoid enumerator allocation
+- Search only filters which rows are displayed; it does not modify the underlying allow state until the user toggles a checkbox or uses the bulk buttons
 
 ## Implementation Notes
 
@@ -64,3 +65,4 @@ The original mod created hundreds of `AssemblyBuilder` + `TypeBuilder` instances
 - `Dialog_BillConfig` has a private `bill` field — accessed via `___bill` injection.
 - `Dialog_ManagePolicies<T>` is generic; the patch targets the specific closed generic `Dialog_ManagePolicies<ApparelPolicy>`.
 - The `ThingFilterUI.DoThingFilterConfigWindow` has many parameters — the prefix only modifies `forceHiddenFilters` via `ref`.
+- The popup anchor is computed from the host storage tab or dialog and then clamped, rather than relying on fixed screen coordinates.

@@ -25,20 +25,29 @@ namespace MaterialFilter.Patches
         [HarmonyPostfix]
         public static void Postfix(
             Dialog_ManagePolicies<ApparelPolicy> __instance,
+            Rect __0,
             ApparelPolicy ___policyInt,
             ref bool ___absorbInputAroundWindow,
             ref bool ___closeOnClickedOutside,
             Rect ___windowRect)
         {
-            if (___policyInt == null)
+            if (___policyInt?.filter == null)
                 return;
 
             ThingFilter filter = ___policyInt.filter;
             var buttonSize = new Vector2(80f, 30f);
-            float top = ___windowRect.y;
-            float left = ___windowRect.x + ___windowRect.width;
+            const float titleHeight = 32f;
+            const float tipHeight = 32f;
+            const float leftColumnWidth = 200f;
+            const float columnGap = 10f;
 
-            if (Widgets.ButtonText(new Rect(215f, 50f, buttonSize.x, buttonSize.y),
+            var buttonRect = new Rect(
+                __0.x + leftColumnWidth + columnGap,
+                __0.y + titleHeight + (tipHeight - buttonSize.y) / 2f,
+                buttonSize.x,
+                buttonSize.y);
+
+            if (Widgets.ButtonText(buttonRect,
                                    "MaterialFilter_FilterButton".Translate()))
             {
                 var existing = Find.WindowStack.WindowOfType<MaterialFilterWindow>();
@@ -54,8 +63,8 @@ namespace MaterialFilter.Patches
                     ___closeOnClickedOutside = false;
                     Find.WindowStack.Add(new MaterialFilterWindow(
                         filter,
-                        top,
-                        left,
+                        ___windowRect.y + buttonRect.y,
+                        ___windowRect.xMax + MaterialFilterUI.PopupGap,
                         WindowLayer.Dialog,
                         () => RestoreParentWindowState(__instance)));
                 }

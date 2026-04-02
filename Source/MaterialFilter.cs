@@ -22,11 +22,6 @@ namespace MaterialFilter
         /// </summary>
         internal static List<SpecialThingFilterDef> GeneratedFilterDefs;
 
-        /// <summary>
-        /// Fast lookup: defName of generated filter → true. Used by the ThingFilterUI patch.
-        /// </summary>
-        internal static HashSet<string> GeneratedFilterDefNames;
-
         static MaterialFilter_Init()
         {
             GenerateFilterDefs();
@@ -54,7 +49,6 @@ namespace MaterialFilter
             }
 
             GeneratedFilterDefs = new List<SpecialThingFilterDef>(materialDefs.Count);
-            GeneratedFilterDefNames = new HashSet<string>(materialDefs.Count);
 
             // Get the mod content pack so the defs are associated with this mod.
             var mcp = LoadedModManager.RunningMods
@@ -104,7 +98,6 @@ namespace MaterialFilter
                 }
 
                 GeneratedFilterDefs.Add(filterDef);
-                GeneratedFilterDefNames.Add(filterDefName);
             }
 
             // Sort by label for consistent UI display.

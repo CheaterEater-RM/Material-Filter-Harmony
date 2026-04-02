@@ -26,20 +26,24 @@ namespace MaterialFilter.Patches
         [HarmonyPostfix]
         public static void Postfix(
             Dialog_BillConfig __instance,
+            Rect __0,
             Bill_Production ___bill,
             ref bool ___absorbInputAroundWindow,
             ref bool ___closeOnClickedOutside,
             Rect ___windowRect)
         {
-            if (!HasStuffIngredients(___bill))
+            if (!HasStuffIngredients(___bill) || ___bill?.ingredientFilter == null)
                 return;
 
             ThingFilter filter = ___bill.ingredientFilter;
             var buttonSize = new Vector2(122f, 25f);
-            float top = ___windowRect.y;
-            float left = ___windowRect.x + ___windowRect.width;
+            var buttonRect = new Rect(
+                __0.xMax - buttonSize.x,
+                __0.y,
+                buttonSize.x,
+                buttonSize.y);
 
-            if (Widgets.ButtonText(new Rect(642f, 25f, buttonSize.x, buttonSize.y),
+            if (Widgets.ButtonText(buttonRect,
                                    "MaterialFilter_FilterButton".Translate() + ">>"))
             {
                 var existing = Find.WindowStack.WindowOfType<MaterialFilterWindow>();
@@ -55,8 +59,8 @@ namespace MaterialFilter.Patches
                     ___closeOnClickedOutside = false;
                     Find.WindowStack.Add(new MaterialFilterWindow(
                         filter,
-                        top,
-                        left,
+                        ___windowRect.y + buttonRect.y,
+                        ___windowRect.xMax + MaterialFilterUI.PopupGap,
                         WindowLayer.Dialog,
                         () => RestoreParentWindowState(__instance)));
                 }
@@ -80,9 +84,13 @@ namespace MaterialFilter.Patches
             List<IngredientCount> ingredients = bill.recipe.ingredients;
             for (int i = 0; i < ingredients.Count; i++)
             {
-                foreach (ThingDef td in ingredients[i].filter.AllowedThingDefs)
+                ThingFilter ingredientFilter = ingredients[i].filter;
+                if (ingredientFilter == null)
+                    continue;
+
+                foreach (ThingDef td in ingredientFilter.AllowedThingDefs)
                 {
-                    if (td.MadeFromStuff)
+                    if (td != null && td.MadeFromStuff)
                         return true;
                 }
             }

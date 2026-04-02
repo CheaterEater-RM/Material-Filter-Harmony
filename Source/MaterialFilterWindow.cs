@@ -20,6 +20,8 @@ namespace MaterialFilter
         private readonly float left;
         private readonly Action onClose;
         private readonly float top;
+        private readonly List<SpecialThingFilterDef> visibleFilterDefs;
+        private string searchText = string.Empty;
         private Vector2 scrollPosition;
 
         // Cached from the pre-sorted list built at startup.
@@ -53,12 +55,15 @@ namespace MaterialFilter
 
             // Use the pre-sorted list built once at startup — no allocations here.
             filterDefs = MaterialFilter_Init.GeneratedFilterDefs;
+            visibleFilterDefs = new List<SpecialThingFilterDef>(filterDefs.Count);
+            RebuildVisibleFilterDefs();
         }
 
         public override void PreOpen()
         {
             base.PreOpen();
-            windowRect = new Rect(left, top, InitialSize.x, InitialSize.y);
+            windowRect = MaterialFilterUI.ClampToScreen(
+                new Rect(left, top, InitialSize.x, InitialSize.y));
         }
 
         public override void PreClose()
@@ -75,12 +80,38 @@ namespace MaterialFilter
             }
         }
 
+        private void RebuildVisibleFilterDefs()
+        {
+            visibleFilterDefs.Clear();
+
+            string trimmedSearch = searchText.Trim();
+            if (trimmedSearch.Length == 0)
+            {
+                visibleFilterDefs.AddRange(filterDefs);
+                return;
+            }
+
+            for (int i = 0; i < filterDefs.Count; i++)
+            {
+                SpecialThingFilterDef filterDef = filterDefs[i];
+                string labelText = filterDef.LabelCap.ToString();
+                if (labelText.IndexOf(trimmedSearch, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                {
+                    visibleFilterDefs.Add(filterDef);
+                }
+            }
+        }
+
         public override void DoWindowContents(Rect rect)
         {
             const float lineHeight = 25f;
             const float indent = 5f;
             const float padding = 5f;
+            const float sectionBorder = 1f;
+            const float controlsGap = 2f;
+            const float searchClearButtonWidth = 24f;
             string headerText = "MaterialFilter_WindowHeader".Translate();
+            string searchLabel = "MaterialFilter_SearchLabel".Translate();
 
             // Measure the longest label for layout.
             float longestFilterName = 0f;
@@ -91,17 +122,20 @@ namespace MaterialFilter
                     longestFilterName = w;
             }
 
-            float innerWidth = Math.Max(Text.CalcSize(headerText).x,
-                                        longestFilterName + padding + lineHeight);
+            float searchLabelWidth = Text.CalcSize(searchLabel).x + padding * 2f;
+            float minSearchFieldWidth = 120f;
+            float innerWidth = Math.Max(
+                Text.CalcSize(headerText).x,
+                Math.Max(
+                    longestFilterName + padding + lineHeight,
+                    searchLabelWidth + minSearchFieldWidth + searchClearButtonWidth + padding));
             float scrollWidth = indent + innerWidth
                 + GUI.skin.verticalScrollbar.margin.left
                 + GUI.skin.verticalScrollbar.fixedWidth
                 + GUI.skin.verticalScrollbar.margin.right;
 
             var headerRect = new Rect(0, 0, scrollWidth, lineHeight);
-            var stuffRect = new Rect(0f, 0f, innerWidth, lineHeight);
-            var viewRect = new Rect(0f, 0f, innerWidth, filterDefs.Count * lineHeight);
-            var scrollRect = new Rect(stuffRect.x, lineHeight, scrollWidth, rect.height - lineHeight);
+            var contentRect = new Rect(0f, lineHeight, scrollWidth, rect.height - lineHeight);
 
             // Header
             TextAnchor prevAnchor = Text.Anchor;
@@ -109,38 +143,90 @@ namespace MaterialFilter
             Widgets.Label(headerRect, headerText);
             Text.Anchor = TextAnchor.UpperLeft;
 
-            stuffRect.width = longestFilterName + padding;
+            Widgets.DrawMenuSection(contentRect);
 
-            // White border
-            Widgets.DrawMenuSection(scrollRect);
-            scrollRect.x += 1f;
-            scrollRect.width -= 2f;
+            var controlsRect = new Rect(
+                contentRect.x + sectionBorder,
+                contentRect.y + sectionBorder,
+                contentRect.width - 2f * sectionBorder,
+                lineHeight * 2f + controlsGap + sectionBorder);
 
             // Clear/Allow buttons
-            var clearRect = new Rect(scrollRect.x + 1f, scrollRect.y + 1f,
-                                     (scrollRect.width - 2f) / 2f, lineHeight);
+            var clearRect = new Rect(
+                controlsRect.x,
+                controlsRect.y,
+                (controlsRect.width - controlsGap) / 2f,
+                lineHeight);
             if (Widgets.ButtonText(clearRect, "ClearAll".Translate()))
             {
                 SetAllowAll(false);
                 SoundDefOf.Checkbox_TurnedOff.PlayOneShotOnCamera();
             }
-            var allowRect = new Rect(clearRect.xMax + 1f, clearRect.y,
-                                     scrollRect.xMax - 2f - clearRect.xMax, lineHeight);
+            var allowRect = new Rect(
+                clearRect.xMax + controlsGap,
+                clearRect.y,
+                controlsRect.xMax - clearRect.xMax - controlsGap,
+                lineHeight);
             if (Widgets.ButtonText(allowRect, "AllowAll".Translate()))
             {
                 SetAllowAll(true);
                 SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
             }
 
+            float clearButtonWidth = string.IsNullOrEmpty(searchText) ? 0f : searchClearButtonWidth + controlsGap;
+            var searchLabelRect = new Rect(
+                controlsRect.x,
+                clearRect.yMax + controlsGap,
+                searchLabelWidth,
+                lineHeight);
+            Widgets.Label(searchLabelRect, searchLabel);
+
+            var searchFieldRect = new Rect(
+                searchLabelRect.xMax,
+                searchLabelRect.y,
+                controlsRect.xMax - searchLabelRect.xMax - clearButtonWidth,
+                lineHeight);
+            string updatedSearchText = Widgets.TextField(searchFieldRect, searchText);
+            if (!string.Equals(updatedSearchText, searchText, StringComparison.Ordinal))
+            {
+                searchText = updatedSearchText;
+                scrollPosition.y = 0f;
+                RebuildVisibleFilterDefs();
+            }
+
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                var clearSearchRect = new Rect(
+                    searchFieldRect.xMax + controlsGap,
+                    searchFieldRect.y,
+                    searchClearButtonWidth,
+                    lineHeight);
+                if (Widgets.ButtonText(clearSearchRect, "X"))
+                {
+                    searchText = string.Empty;
+                    scrollPosition.y = 0f;
+                    RebuildVisibleFilterDefs();
+                    GUI.FocusControl(null);
+                }
+            }
+
             // Scroll list
-            scrollRect.y += lineHeight + 2f;
-            scrollRect.height -= lineHeight + 3f;
+            var scrollRect = new Rect(
+                contentRect.x + sectionBorder,
+                controlsRect.yMax + controlsGap,
+                contentRect.width - 2f * sectionBorder,
+                contentRect.yMax - controlsRect.yMax - controlsGap - sectionBorder);
+            var viewRect = new Rect(
+                0f,
+                0f,
+                innerWidth,
+                Math.Max(lineHeight, visibleFilterDefs.Count * lineHeight));
             Widgets.BeginScrollView(scrollRect, ref scrollPosition, viewRect);
 
             float curY = 0f;
-            for (int i = 0; i < filterDefs.Count; i++)
+            for (int i = 0; i < visibleFilterDefs.Count; i++)
             {
-                var sdef = filterDefs[i];
+                var sdef = visibleFilterDefs[i];
                 var labelRect = new Rect(indent, curY, longestFilterName + padding, lineHeight);
                 Widgets.Label(labelRect, sdef.LabelCap);
 
@@ -154,11 +240,18 @@ namespace MaterialFilter
                 curY += lineHeight;
             }
 
+            if (visibleFilterDefs.Count == 0)
+            {
+                var noResultsRect = new Rect(indent, 0f, innerWidth - indent * 2f, lineHeight);
+                Widgets.Label(noResultsRect, "MaterialFilter_NoResults".Translate());
+            }
+
             Text.Anchor = prevAnchor;
             Widgets.EndScrollView();
 
             // Resize window to fit content.
             windowRect.width = scrollWidth + 2 * Margin;
+            windowRect = MaterialFilterUI.ClampToScreen(windowRect);
         }
     }
 }

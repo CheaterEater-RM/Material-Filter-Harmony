@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+  <MaterialFilter_FilterButton>Filter</MaterialFilter_FilterButton>
+  <MaterialFilter_WindowHeader>Gegenstände erlauben aus</MaterialFilter_WindowHeader>  <MaterialFilter_SearchLabel>Suche</MaterialFilter_SearchLabel>
+  <MaterialFilter_NoResults>Keine passenden Materialien gefunden.</MaterialFilter_NoResults>
+</LanguageData>

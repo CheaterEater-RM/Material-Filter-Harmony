@@ -53,11 +53,16 @@ namespace MaterialFilter.Patches
                                 + "; using fallback popup positioning.");
                 }
 
-                tabRect = new Rect(0f, ___WinSize.y / 2f, ___WinSize.x, ___WinSize.y);
+                tabRect = new Rect(0f, 0f, ___WinSize.x, ___WinSize.y);
             }
 
             var buttonSize = new Vector2(80f, 29f);
-            if (Widgets.ButtonText(new Rect(180, 10, buttonSize.x, buttonSize.y),
+            var buttonRect = new Rect(
+                ___WinSize.x - buttonSize.x - 10f,
+                10f,
+                buttonSize.x,
+                buttonSize.y);
+            if (Widgets.ButtonText(buttonRect,
                                    "MaterialFilter_FilterButton".Translate() + ">>"))
             {
                 var existing = Find.WindowStack.WindowOfType<MaterialFilterWindow>();
@@ -68,7 +73,10 @@ namespace MaterialFilter.Patches
                 else
                 {
                     Find.WindowStack.Add(new MaterialFilterWindow(
-                        filter, tabRect.y, ___WinSize.x, WindowLayer.GameUI));
+                        filter,
+                        tabRect.y + buttonRect.y,
+                        tabRect.xMax + MaterialFilterUI.PopupGap,
+                        WindowLayer.GameUI));
                 }
             }
         }

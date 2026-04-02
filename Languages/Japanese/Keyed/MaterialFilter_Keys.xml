@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+  <MaterialFilter_FilterButton>フィルター</MaterialFilter_FilterButton>
+  <MaterialFilter_WindowHeader>次の素材でできたアイテムを許可</MaterialFilter_WindowHeader>
+  <MaterialFilter_SearchLabel>検索</MaterialFilter_SearchLabel>
+  <MaterialFilter_NoResults>一致する素材がありません。</MaterialFilter_NoResults>
+</LanguageData>
