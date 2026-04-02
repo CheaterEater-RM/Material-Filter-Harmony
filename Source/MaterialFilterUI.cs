@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -9,8 +10,21 @@ namespace MaterialFilter
     {
         internal const float PopupGap = 8f;
         internal const float PopupHeight = 480f;
+        internal const float MaterialIconSize = 22f;
+        internal const float MaterialIconGap = 4f;
 
         private const float ScreenPadding = 12f;
+
+        private static readonly Dictionary<ThingDef, MaterialIconData> MaterialIconCache =
+            new Dictionary<ThingDef, MaterialIconData>();
+
+        private sealed class MaterialIconData
+        {
+            internal Texture2D Texture;
+            internal Material Material;
+            internal Color Color;
+            internal float Scale;
+        }
 
         internal static float GetPopupWidth()
         {
@@ -55,6 +69,68 @@ namespace MaterialFilter
             rect.x = Mathf.Clamp(rect.x, ScreenPadding, maxX);
             rect.y = Mathf.Clamp(rect.y, ScreenPadding, maxY);
             return rect;
+        }
+
+        internal static bool TryDrawMaterialIcon(Rect rect, ThingDef materialDef)
+        {
+            if (materialDef == null)
+                return false;
+
+            MaterialIconData iconData;
+            if (!MaterialIconCache.TryGetValue(materialDef, out iconData))
+            {
+                iconData = ResolveMaterialIcon(materialDef);
+                MaterialIconCache[materialDef] = iconData;
+            }
+
+            if (iconData.Texture == null || iconData.Texture == BaseContent.BadTex)
+                return false;
+
+            Color previousColor = GUI.color;
+            GUI.color = iconData.Color;
+            Widgets.DrawTextureFitted(rect, iconData.Texture, iconData.Scale, iconData.Material);
+            GUI.color = previousColor;
+            return true;
+        }
+
+        private static MaterialIconData ResolveMaterialIcon(ThingDef materialDef)
+        {
+            var iconData = new MaterialIconData
+            {
+                Color = Color.white,
+                Scale = 1f
+            };
+
+            try
+            {
+                Material material;
+                Texture2D texture = Widgets.GetIconFor(materialDef, out material, materialDef);
+                iconData.Texture = texture;
+                iconData.Material = material;
+                iconData.Color = material != null
+                    ? Color.white
+                    : materialDef.GetColorForStuff(materialDef);
+                iconData.Scale = GenUI.IconDrawScale(materialDef);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("[Material Filter] Failed to resolve icon for "
+                            + materialDef.defName + ": " + ex.Message);
+            }
+
+            return iconData;
+        }
+
+        internal static string GetMaterialTooltip(ThingDef materialDef, SpecialThingFilterDef filterDef)
+        {
+            if (materialDef == null)
+                return filterDef?.LabelCap.ToString() ?? string.Empty;
+
+            string label = materialDef.LabelCap.ToString();
+            if (materialDef.description.NullOrEmpty())
+                return label;
+
+            return label + "\n\n" + materialDef.description;
         }
     }
 }

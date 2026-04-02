@@ -41,6 +41,3 @@ Thumbs.db
 build.log
 build_err.log
 *.binlog
-
-# old hugslib version reference
-Material Filter (old hugslib)/

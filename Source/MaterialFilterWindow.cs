@@ -111,6 +111,7 @@ namespace MaterialFilter
             const float sectionBorder = 1f;
             const float controlsGap = 2f;
             const float searchClearButtonWidth = 24f;
+            float iconColumnWidth = MaterialFilterUI.MaterialIconSize + MaterialFilterUI.MaterialIconGap;
             string headerText = string.Format(
                 "{0}",
                 "MaterialFilter_WindowHeader".Translate());
@@ -130,7 +131,7 @@ namespace MaterialFilter
             float innerWidth = Math.Max(
                 Text.CalcSize(headerText).x,
                 Math.Max(
-                    longestFilterName + padding + lineHeight,
+                    iconColumnWidth + longestFilterName + padding + lineHeight,
                     searchLabelWidth + minSearchFieldWidth + searchClearButtonWidth + padding));
             float scrollWidth = indent + innerWidth
                 + GUI.skin.verticalScrollbar.margin.left
@@ -230,19 +231,33 @@ namespace MaterialFilter
             for (int i = 0; i < visibleFilterDefs.Count; i++)
             {
                 var sdef = visibleFilterDefs[i];
-                var labelRect = new Rect(indent, curY, longestFilterName + padding, lineHeight);
+                ThingDef materialDef;
+                MaterialFilter_Init.TryGetMaterialDef(sdef, out materialDef);
+
+                float labelX = indent + iconColumnWidth;
+                float checkboxX = labelX + longestFilterName + padding;
+                var iconRect = new Rect(
+                    indent,
+                    curY + (lineHeight - MaterialFilterUI.MaterialIconSize) / 2f,
+                    MaterialFilterUI.MaterialIconSize,
+                    MaterialFilterUI.MaterialIconSize);
+                var labelRect = new Rect(labelX, curY, longestFilterName + padding, lineHeight);
+                var toggleRect = new Rect(indent, curY, checkboxX - indent, lineHeight);
                 var clickRect = new Rect(indent, curY, innerWidth - indent, lineHeight);
                 if (Mouse.IsOver(clickRect))
                 {
                     Widgets.DrawHighlight(clickRect);
                 }
+                TooltipHandler.TipRegion(clickRect, MaterialFilterUI.GetMaterialTooltip(materialDef, sdef));
+
+                MaterialFilterUI.TryDrawMaterialIcon(iconRect, materialDef);
                 Widgets.Label(labelRect, sdef.LabelCap);
 
                 bool isAllowed = filter.Allows(sdef);
                 bool prev = isAllowed;
-                Widgets.Checkbox(indent + longestFilterName + padding, curY, ref isAllowed,
+                Widgets.Checkbox(checkboxX, curY, ref isAllowed,
                                  lineHeight, false, false);
-                if (Widgets.ButtonInvisible(labelRect))
+                if (Widgets.ButtonInvisible(toggleRect))
                 {
                     isAllowed = !prev;
                 }

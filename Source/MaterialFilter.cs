@@ -22,6 +22,8 @@ namespace MaterialFilter
         /// </summary>
         internal static List<SpecialThingFilterDef> GeneratedFilterDefs;
 
+        internal static Dictionary<SpecialThingFilterDef, ThingDef> GeneratedFilterMaterials;
+
         static MaterialFilter_Init()
         {
             GenerateFilterDefs();
@@ -49,6 +51,7 @@ namespace MaterialFilter
             }
 
             GeneratedFilterDefs = new List<SpecialThingFilterDef>(materialDefs.Count);
+            GeneratedFilterMaterials = new Dictionary<SpecialThingFilterDef, ThingDef>(materialDefs.Count);
 
             // Get the mod content pack so the defs are associated with this mod.
             var mcp = LoadedModManager.RunningMods
@@ -98,10 +101,20 @@ namespace MaterialFilter
                 }
 
                 GeneratedFilterDefs.Add(filterDef);
+                GeneratedFilterMaterials[filterDef] = stuffDef;
             }
 
             // Sort by label for consistent UI display.
             GeneratedFilterDefs.SortBy(d => d.label);
+        }
+
+        internal static bool TryGetMaterialDef(SpecialThingFilterDef filterDef, out ThingDef materialDef)
+        {
+            if (filterDef != null && GeneratedFilterMaterials != null)
+                return GeneratedFilterMaterials.TryGetValue(filterDef, out materialDef);
+
+            materialDef = null;
+            return false;
         }
     }
 
