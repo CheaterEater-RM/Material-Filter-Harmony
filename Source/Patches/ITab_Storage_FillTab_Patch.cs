@@ -56,14 +56,20 @@ namespace MaterialFilter.Patches
                 tabRect = new Rect(0f, 0f, ___WinSize.x, ___WinSize.y);
             }
 
-            var buttonSize = new Vector2(80f, 29f);
+            string buttonLabel = "MaterialFilter_FilterButton".Translate() + ">>";
+            var buttonSize = new Vector2(MaterialFilterUI.GetButtonWidth(buttonLabel, 80f), 29f);
             var buttonRect = new Rect(
                 ___WinSize.x - buttonSize.x - 10f,
                 10f,
                 buttonSize.x,
+            var buttonScreenRect = new Rect(
+                tabRect.xMax - buttonSize.x - 10f,
+                tabRect.y + buttonRect.y,
+                buttonSize.x,
                 buttonSize.y);
-            if (Widgets.ButtonText(buttonRect,
-                                   "MaterialFilter_FilterButton".Translate() + ">>"))
+                buttonSize.y);
+            TooltipHandler.TipRegion(buttonRect, "MaterialFilter_WindowHeader".Translate());
+            if (Widgets.ButtonText(buttonRect, buttonLabel))
             {
                 var existing = Find.WindowStack.WindowOfType<MaterialFilterWindow>();
                 if (existing != null)
@@ -72,10 +78,13 @@ namespace MaterialFilter.Patches
                 }
                 else
                 {
+                    Vector2 popupPosition = MaterialFilterUI.GetPopupPosition(
+                        tabRect,
+                        buttonScreenRect);
                     Find.WindowStack.Add(new MaterialFilterWindow(
                         filter,
-                        tabRect.y + buttonRect.y,
-                        tabRect.xMax + MaterialFilterUI.PopupGap,
+                        popupPosition.y,
+                        popupPosition.x,
                         WindowLayer.GameUI));
                 }
             }

@@ -30,8 +30,8 @@ namespace MaterialFilter
         protected override float Margin => 8f;
 
         public override Vector2 InitialSize => new Vector2(
-            Math.Min(300, Math.Max(1, UI.screenWidth - 300)),
-            480);
+            MaterialFilterUI.GetPopupWidth(),
+            MaterialFilterUI.PopupHeight);
 
         public MaterialFilterWindow(
             ThingFilter filter,

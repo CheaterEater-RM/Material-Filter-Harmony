@@ -36,15 +36,21 @@ namespace MaterialFilter.Patches
                 return;
 
             ThingFilter filter = ___bill.ingredientFilter;
-            var buttonSize = new Vector2(122f, 25f);
+            string buttonLabel = "MaterialFilter_FilterButton".Translate() + ">>";
+            var buttonSize = new Vector2(MaterialFilterUI.GetButtonWidth(buttonLabel, 122f), 25f);
             var buttonRect = new Rect(
                 __0.xMax - buttonSize.x,
                 __0.y,
                 buttonSize.x,
                 buttonSize.y);
+            var buttonScreenRect = new Rect(
+                ___windowRect.x + buttonRect.x,
+                ___windowRect.y + buttonRect.y,
+                buttonRect.width,
+                buttonRect.height);
+            TooltipHandler.TipRegion(buttonRect, "MaterialFilter_WindowHeader".Translate());
 
-            if (Widgets.ButtonText(buttonRect,
-                                   "MaterialFilter_FilterButton".Translate() + ">>"))
+            if (Widgets.ButtonText(buttonRect, buttonLabel))
             {
                 var existing = Find.WindowStack.WindowOfType<MaterialFilterWindow>();
                 if (existing != null)
@@ -57,10 +63,13 @@ namespace MaterialFilter.Patches
                 {
                     ___absorbInputAroundWindow = false;
                     ___closeOnClickedOutside = false;
+                    Vector2 popupPosition = MaterialFilterUI.GetPopupPosition(
+                        ___windowRect,
+                        buttonScreenRect);
                     Find.WindowStack.Add(new MaterialFilterWindow(
                         filter,
-                        ___windowRect.y + buttonRect.y,
-                        ___windowRect.xMax + MaterialFilterUI.PopupGap,
+                        popupPosition.y,
+                        popupPosition.x,
                         WindowLayer.Dialog,
                         () => RestoreParentWindowState(__instance)));
                 }
