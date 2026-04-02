@@ -62,11 +62,11 @@ namespace MaterialFilter.Patches
                 ___WinSize.x - buttonSize.x - 10f,
                 10f,
                 buttonSize.x,
+                buttonSize.y);
             var buttonScreenRect = new Rect(
                 tabRect.xMax - buttonSize.x - 10f,
                 tabRect.y + buttonRect.y,
                 buttonSize.x,
-                buttonSize.y);
                 buttonSize.y);
             TooltipHandler.TipRegion(buttonRect, "MaterialFilter_WindowHeader".Translate());
             if (Widgets.ButtonText(buttonRect, buttonLabel))

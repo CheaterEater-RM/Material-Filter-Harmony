@@ -95,7 +95,8 @@ namespace MaterialFilter
             {
                 SpecialThingFilterDef filterDef = filterDefs[i];
                 string labelText = filterDef.LabelCap.ToString();
-                if (labelText.IndexOf(trimmedSearch, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                if (labelText.IndexOf(trimmedSearch, StringComparison.CurrentCultureIgnoreCase) >= 0
+                    || filterDef.defName.IndexOf(trimmedSearch, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     visibleFilterDefs.Add(filterDef);
                 }
@@ -228,14 +229,29 @@ namespace MaterialFilter
             {
                 var sdef = visibleFilterDefs[i];
                 var labelRect = new Rect(indent, curY, longestFilterName + padding, lineHeight);
+                var clickRect = new Rect(indent, curY, innerWidth - indent, lineHeight);
+                if (Mouse.IsOver(clickRect))
+                {
+                    Widgets.DrawHighlight(clickRect);
+                }
                 Widgets.Label(labelRect, sdef.LabelCap);
 
                 bool isAllowed = filter.Allows(sdef);
                 bool prev = isAllowed;
                 Widgets.Checkbox(indent + longestFilterName + padding, curY, ref isAllowed,
-                                 lineHeight, false, true);
+                                 lineHeight, paintable: false, playSound: false);
+                if (Widgets.ButtonInvisible(labelRect))
+                {
+                    isAllowed = !prev;
+                }
                 if (isAllowed != prev)
+                {
                     filter.SetAllow(sdef, isAllowed);
+                    if (isAllowed)
+                        SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
+                    else
+                        SoundDefOf.Checkbox_TurnedOff.PlayOneShotOnCamera();
+                }
 
                 curY += lineHeight;
             }
