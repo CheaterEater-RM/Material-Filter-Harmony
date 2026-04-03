@@ -36,15 +36,14 @@ namespace MaterialFilter
 
         private static void GenerateFilterDefs()
         {
-            // Collect every ThingDef that is a stuff material.
-            // Use a HashSet on defName to avoid duplicates when a material belongs
-            // to multiple StuffCategoryDefs.
+            // Match the original HugsLib mod's generation rules so old saves
+            // resolve against the same material-filter def set.
             var seenDefNames = new HashSet<string>();
             var materialDefs = new List<ThingDef>();
 
             foreach (var td in DefDatabase<ThingDef>.AllDefsListForReading)
             {
-                if (td.IsStuff && seenDefNames.Add(td.defName))
+                if (ShouldGenerateMaterialFilter(td) && seenDefNames.Add(td.defName))
                 {
                     materialDefs.Add(td);
                 }
@@ -106,6 +105,12 @@ namespace MaterialFilter
 
             // Sort by label for consistent UI display.
             GeneratedFilterDefs.SortBy(d => d.label);
+        }
+
+        private static bool ShouldGenerateMaterialFilter(ThingDef thingDef)
+        {
+            return thingDef?.stuffProps?.categories != null
+                   && thingDef.stuffProps.categories.Count > 0;
         }
 
         internal static bool TryGetMaterialDef(SpecialThingFilterDef filterDef, out ThingDef materialDef)
