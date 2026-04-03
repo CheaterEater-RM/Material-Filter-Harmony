@@ -80,6 +80,14 @@ namespace MaterialFilter
             }
         }
 
+        private void SetAllowVisible(bool allow)
+        {
+            for (int i = 0; i < visibleFilterDefs.Count; i++)
+            {
+                filter.SetAllow(visibleFilterDefs[i], allow);
+            }
+        }
+
         private void RebuildVisibleFilterDefs()
         {
             visibleFilterDefs.Clear();
@@ -115,7 +123,15 @@ namespace MaterialFilter
             string headerText = string.Format(
                 "{0}",
                 "MaterialFilter_WindowHeader".Translate());
+            string addSearchText = "MaterialFilter_AddSearch".Translate();
             string searchLabel = "MaterialFilter_SearchLabel".Translate();
+            float clearAllButtonWidth = MaterialFilterUI.GetButtonWidth("ClearAll".Translate(), 72f);
+            float allowAllButtonWidth = MaterialFilterUI.GetButtonWidth("AllowAll".Translate(), 72f);
+            float addSearchButtonWidth = MaterialFilterUI.GetButtonWidth(addSearchText, 92f);
+            float buttonRowWidth = clearAllButtonWidth
+                + allowAllButtonWidth
+                + addSearchButtonWidth
+                + controlsGap * 2f;
 
             // Measure the longest label for layout.
             float longestFilterName = 0f;
@@ -131,8 +147,10 @@ namespace MaterialFilter
             float innerWidth = Math.Max(
                 Text.CalcSize(headerText).x,
                 Math.Max(
-                    iconColumnWidth + longestFilterName + padding + lineHeight,
-                    searchLabelWidth + minSearchFieldWidth + searchClearButtonWidth + padding));
+                    Math.Max(
+                        iconColumnWidth + longestFilterName + padding + lineHeight,
+                        searchLabelWidth + minSearchFieldWidth + searchClearButtonWidth + padding),
+                    buttonRowWidth));
             float scrollWidth = indent + innerWidth
                 + GUI.skin.verticalScrollbar.margin.left
                 + GUI.skin.verticalScrollbar.fixedWidth
@@ -159,7 +177,7 @@ namespace MaterialFilter
             var clearRect = new Rect(
                 controlsRect.x,
                 controlsRect.y,
-                (controlsRect.width - controlsGap) / 2f,
+                clearAllButtonWidth,
                 lineHeight);
             if (Widgets.ButtonText(clearRect, "ClearAll".Translate()))
             {
@@ -169,13 +187,27 @@ namespace MaterialFilter
             var allowRect = new Rect(
                 clearRect.xMax + controlsGap,
                 clearRect.y,
-                controlsRect.xMax - clearRect.xMax - controlsGap,
+                allowAllButtonWidth,
                 lineHeight);
             if (Widgets.ButtonText(allowRect, "AllowAll".Translate()))
             {
                 SetAllowAll(true);
                 SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
             }
+            bool canAddSearch = searchText.Trim().Length > 0 && visibleFilterDefs.Count > 0;
+            bool previousGuiEnabled = GUI.enabled;
+            GUI.enabled = canAddSearch;
+            var addSearchRect = new Rect(
+                allowRect.xMax + controlsGap,
+                allowRect.y,
+                addSearchButtonWidth,
+                lineHeight);
+            if (Widgets.ButtonText(addSearchRect, addSearchText))
+            {
+                SetAllowVisible(true);
+                SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
+            }
+            GUI.enabled = previousGuiEnabled;
 
             float clearButtonWidth = string.IsNullOrEmpty(searchText) ? 0f : searchClearButtonWidth + controlsGap;
             var searchLabelRect = new Rect(
@@ -255,19 +287,12 @@ namespace MaterialFilter
 
                 bool isAllowed = filter.Allows(sdef);
                 bool prev = isAllowed;
+                Widgets.ToggleInvisibleDraggable(toggleRect, ref isAllowed, true, true);
                 Widgets.Checkbox(checkboxX, curY, ref isAllowed,
-                                 lineHeight, false, false);
-                if (Widgets.ButtonInvisible(toggleRect))
-                {
-                    isAllowed = !prev;
-                }
+                                 lineHeight, false, true);
                 if (isAllowed != prev)
                 {
                     filter.SetAllow(sdef, isAllowed);
-                    if (isAllowed)
-                        SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
-                    else
-                        SoundDefOf.Checkbox_TurnedOff.PlayOneShotOnCamera();
                 }
 
                 curY += lineHeight;

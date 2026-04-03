@@ -2,6 +2,7 @@
 <LanguageData>
   <MaterialFilter_FilterButton>Filter</MaterialFilter_FilterButton>
   <MaterialFilter_WindowHeader>Gegenstände erlauben aus</MaterialFilter_WindowHeader>
+  <MaterialFilter_AddSearch>Suche hinzufügen</MaterialFilter_AddSearch>
   <MaterialFilter_SearchLabel>Suche</MaterialFilter_SearchLabel>
   <MaterialFilter_NoResults>Keine passenden Materialien gefunden.</MaterialFilter_NoResults>
 </LanguageData>

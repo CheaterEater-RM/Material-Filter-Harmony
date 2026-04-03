@@ -2,6 +2,7 @@
 <LanguageData>
   <MaterialFilter_FilterButton>Фильтр</MaterialFilter_FilterButton>
   <MaterialFilter_WindowHeader>Разрешить предметы из</MaterialFilter_WindowHeader>
+  <MaterialFilter_AddSearch>Добавить поиск</MaterialFilter_AddSearch>
   <MaterialFilter_SearchLabel>Поиск</MaterialFilter_SearchLabel>
   <MaterialFilter_NoResults>Подходящие материалы не найдены.</MaterialFilter_NoResults>
 </LanguageData>

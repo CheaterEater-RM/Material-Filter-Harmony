@@ -2,6 +2,7 @@
 <LanguageData>
   <MaterialFilter_FilterButton>Filter</MaterialFilter_FilterButton>
   <MaterialFilter_WindowHeader>Allow items made from</MaterialFilter_WindowHeader>
+  <MaterialFilter_AddSearch>Add search</MaterialFilter_AddSearch>
   <MaterialFilter_SearchLabel>Search</MaterialFilter_SearchLabel>
   <MaterialFilter_NoResults>No matching materials.</MaterialFilter_NoResults>
 </LanguageData>
