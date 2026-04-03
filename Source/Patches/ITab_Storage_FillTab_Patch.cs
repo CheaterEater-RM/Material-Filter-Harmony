@@ -59,12 +59,12 @@ namespace MaterialFilter.Patches
             string buttonLabel = "MaterialFilter_FilterButton".Translate() + ">>";
             var buttonSize = new Vector2(MaterialFilterUI.GetButtonWidth(buttonLabel, 80f), 29f);
             var buttonRect = new Rect(
-                ___WinSize.x - buttonSize.x - 10f,
+                ___WinSize.x - buttonSize.x - 30f,
                 10f,
                 buttonSize.x,
                 buttonSize.y);
             var buttonScreenRect = new Rect(
-                tabRect.xMax - buttonSize.x - 10f,
+                tabRect.xMax - buttonSize.x - 30f,
                 tabRect.y + buttonRect.y,
                 buttonSize.x,
                 buttonSize.y);

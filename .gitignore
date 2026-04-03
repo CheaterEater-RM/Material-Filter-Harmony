@@ -41,3 +41,6 @@ Thumbs.db
 build.log
 build_err.log
 *.binlog
+
+# Workspace files
+*.code-workspace
