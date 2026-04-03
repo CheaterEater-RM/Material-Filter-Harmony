@@ -24,6 +24,8 @@ namespace MaterialFilter
 
         internal static Dictionary<SpecialThingFilterDef, ThingDef> GeneratedFilterMaterials;
 
+        internal static Dictionary<ThingDef, SpecialThingFilterDef> MaterialFilterDefsByThingDef;
+
         static MaterialFilter_Init()
         {
             GenerateFilterDefs();
@@ -51,6 +53,7 @@ namespace MaterialFilter
 
             GeneratedFilterDefs = new List<SpecialThingFilterDef>(materialDefs.Count);
             GeneratedFilterMaterials = new Dictionary<SpecialThingFilterDef, ThingDef>(materialDefs.Count);
+            MaterialFilterDefsByThingDef = new Dictionary<ThingDef, SpecialThingFilterDef>(materialDefs.Count);
 
             // Get the mod content pack so the defs are associated with this mod.
             var mcp = LoadedModManager.RunningMods
@@ -101,6 +104,7 @@ namespace MaterialFilter
 
                 GeneratedFilterDefs.Add(filterDef);
                 GeneratedFilterMaterials[filterDef] = stuffDef;
+                MaterialFilterDefsByThingDef[stuffDef] = filterDef;
             }
 
             // Sort by label for consistent UI display.
@@ -127,6 +131,53 @@ namespace MaterialFilter
             return filterDef != null
                    && GeneratedFilterMaterials != null
                    && GeneratedFilterMaterials.ContainsKey(filterDef);
+        }
+
+        internal static bool TryGetMaterialFilterDef(ThingDef thingDef, out SpecialThingFilterDef filterDef)
+        {
+            if (thingDef != null && MaterialFilterDefsByThingDef != null)
+                return MaterialFilterDefsByThingDef.TryGetValue(thingDef, out filterDef);
+
+            filterDef = null;
+            return false;
+        }
+
+        internal static bool TryGetRelevantMaterials(Thing t, out List<ThingDef> materialDefs)
+        {
+            materialDefs = null;
+            if (t?.def == null)
+                return false;
+
+            if (t.def.apparel == null && t.def.weaponClasses.NullOrEmpty())
+                return false;
+
+            HashSet<ThingDef> matches = null;
+
+            if (TryGetMaterialFilterDef(t.Stuff, out _))
+            {
+                matches = new HashSet<ThingDef> { t.Stuff };
+            }
+
+            if (!t.def.costList.NullOrEmpty())
+            {
+                for (int i = 0; i < t.def.costList.Count; i++)
+                {
+                    ThingDef materialDef = t.def.costList[i]?.thingDef;
+                    if (!TryGetMaterialFilterDef(materialDef, out _))
+                        continue;
+
+                    if (matches == null)
+                        matches = new HashSet<ThingDef>();
+
+                    matches.Add(materialDef);
+                }
+            }
+
+            if (matches == null || matches.Count == 0)
+                return false;
+
+            materialDefs = matches.ToList();
+            return true;
         }
     }
 
@@ -236,6 +287,80 @@ namespace MaterialFilter
                 .Select(filterDef => filterDef.defName)
                 .Distinct()
                 .ToList();
+        }
+    }
+
+    [HarmonyPatch(typeof(ThingFilter), nameof(ThingFilter.Allows), new[] { typeof(Thing) })]
+    internal static class ThingFilter_AllowsThing_Patch
+    {
+        private sealed class State
+        {
+            internal List<SpecialThingFilterDef> OriginalDisallowedSpecialFilters;
+            internal List<ThingDef> RelevantMaterials;
+        }
+
+        private static readonly AccessTools.FieldRef<ThingFilter, List<SpecialThingFilterDef>>
+            DisallowedSpecialFiltersRef =
+                AccessTools.FieldRefAccess<ThingFilter, List<SpecialThingFilterDef>>("disallowedSpecialFilters");
+
+        [HarmonyPrefix]
+        private static void Prefix(ThingFilter __instance, Thing t, ref State __state)
+        {
+            __state = null;
+
+            if (!MaterialFilter_Init.TryGetRelevantMaterials(t, out List<ThingDef> relevantMaterials))
+                return;
+
+            List<SpecialThingFilterDef> disallowedSpecialFilters = DisallowedSpecialFiltersRef(__instance);
+            if (disallowedSpecialFilters == null || disallowedSpecialFilters.Count == 0)
+                return;
+
+            bool hasDisallowedMaterialFilters = false;
+            for (int i = 0; i < disallowedSpecialFilters.Count; i++)
+            {
+                if (MaterialFilter_Init.IsGeneratedMaterialFilter(disallowedSpecialFilters[i]))
+                {
+                    hasDisallowedMaterialFilters = true;
+                    break;
+                }
+            }
+
+            if (!hasDisallowedMaterialFilters)
+                return;
+
+            __state = new State
+            {
+                OriginalDisallowedSpecialFilters = disallowedSpecialFilters,
+                RelevantMaterials = relevantMaterials
+            };
+
+            DisallowedSpecialFiltersRef(__instance) = disallowedSpecialFilters
+                .Where(filterDef => !MaterialFilter_Init.IsGeneratedMaterialFilter(filterDef))
+                .ToList();
+        }
+
+        [HarmonyPostfix]
+        private static void Postfix(ThingFilter __instance, ref bool __result, State __state)
+        {
+            if (__state == null)
+                return;
+
+            DisallowedSpecialFiltersRef(__instance) = __state.OriginalDisallowedSpecialFilters;
+
+            if (!__result)
+                return;
+
+            for (int i = 0; i < __state.RelevantMaterials.Count; i++)
+            {
+                ThingDef materialDef = __state.RelevantMaterials[i];
+                if (!MaterialFilter_Init.TryGetMaterialFilterDef(materialDef, out SpecialThingFilterDef filterDef))
+                    continue;
+
+                if (!__state.OriginalDisallowedSpecialFilters.Contains(filterDef))
+                    return;
+            }
+
+            __result = false;
         }
     }
 
