@@ -6,7 +6,8 @@
   <supportedVersions>
     <li>1.6</li>
   </supportedVersions>
-  <description>Allows filtering items in stockpiles, shelves, bills, and outfit policies by the material they are made from. Fork of Kami Katze's Material Filter, rewritten to use Harmony directly (no HugsLib dependency) with QoL improvements.</description>
+  <description>Allows filtering items in stockpiles, shelves, bills, and apparel policies by the material they are made from. Fork of Kami Katze's Material Filter, rewritten to use Harmony directly (no HugsLib dependency) with QoL improvements.</description>
+  <modVersion>1.0</modVersion>
 
   <modDependencies>
     <li>
