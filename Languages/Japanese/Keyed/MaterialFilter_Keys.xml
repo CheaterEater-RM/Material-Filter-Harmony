@@ -3,6 +3,7 @@
   <MaterialFilter_FilterButton>フィルター</MaterialFilter_FilterButton>
   <MaterialFilter_WindowHeader>次の素材でできたアイテムを許可</MaterialFilter_WindowHeader>
   <MaterialFilter_AddSearch>検索結果を追加</MaterialFilter_AddSearch>
+  <MaterialFilter_RemoveSearch>検索結果を除外</MaterialFilter_RemoveSearch>
   <MaterialFilter_SearchLabel>検索</MaterialFilter_SearchLabel>
   <MaterialFilter_NoResults>一致する素材がありません。</MaterialFilter_NoResults>
 </LanguageData>

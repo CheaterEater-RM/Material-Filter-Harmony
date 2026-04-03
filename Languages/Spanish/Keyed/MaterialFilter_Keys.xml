@@ -3,6 +3,7 @@
   <MaterialFilter_FilterButton>Filtrar</MaterialFilter_FilterButton>
   <MaterialFilter_WindowHeader>Permitir objetos hechos de</MaterialFilter_WindowHeader>
   <MaterialFilter_AddSearch>Añadir búsqueda</MaterialFilter_AddSearch>
+  <MaterialFilter_RemoveSearch>Quitar búsqueda</MaterialFilter_RemoveSearch>
   <MaterialFilter_SearchLabel>Buscar</MaterialFilter_SearchLabel>
   <MaterialFilter_NoResults>No se encontraron materiales.</MaterialFilter_NoResults>
 </LanguageData>

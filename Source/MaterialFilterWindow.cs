@@ -124,14 +124,15 @@ namespace MaterialFilter
                 "{0}",
                 "MaterialFilter_WindowHeader".Translate());
             string addSearchText = "MaterialFilter_AddSearch".Translate();
+            string removeSearchText = "MaterialFilter_RemoveSearch".Translate();
             string searchLabel = "MaterialFilter_SearchLabel".Translate();
             float clearAllButtonWidth = MaterialFilterUI.GetButtonWidth("ClearAll".Translate(), 72f);
             float allowAllButtonWidth = MaterialFilterUI.GetButtonWidth("AllowAll".Translate(), 72f);
             float addSearchButtonWidth = MaterialFilterUI.GetButtonWidth(addSearchText, 92f);
-            float buttonRowWidth = clearAllButtonWidth
-                + allowAllButtonWidth
-                + addSearchButtonWidth
-                + controlsGap * 2f;
+            float removeSearchButtonWidth = MaterialFilterUI.GetButtonWidth(removeSearchText, 92f);
+            float leftColumnWidth = Math.Max(clearAllButtonWidth, addSearchButtonWidth);
+            float rightColumnWidth = Math.Max(allowAllButtonWidth, removeSearchButtonWidth);
+            float buttonRowWidth = leftColumnWidth + rightColumnWidth + controlsGap;
 
             // Measure the longest label for layout.
             float longestFilterName = 0f;
@@ -171,13 +172,13 @@ namespace MaterialFilter
                 contentRect.x + sectionBorder,
                 contentRect.y + sectionBorder,
                 contentRect.width - 2f * sectionBorder,
-                lineHeight * 2f + controlsGap + sectionBorder);
+                lineHeight * 3f + controlsGap * 2f + sectionBorder);
 
-            // Clear/Allow buttons
+            // Global buttons
             var clearRect = new Rect(
                 controlsRect.x,
                 controlsRect.y,
-                clearAllButtonWidth,
+                leftColumnWidth,
                 lineHeight);
             if (Widgets.ButtonText(clearRect, "ClearAll".Translate()))
             {
@@ -185,34 +186,46 @@ namespace MaterialFilter
                 SoundDefOf.Checkbox_TurnedOff.PlayOneShotOnCamera();
             }
             var allowRect = new Rect(
-                clearRect.xMax + controlsGap,
+                controlsRect.x + leftColumnWidth + controlsGap,
                 clearRect.y,
-                allowAllButtonWidth,
+                rightColumnWidth,
                 lineHeight);
             if (Widgets.ButtonText(allowRect, "AllowAll".Translate()))
             {
                 SetAllowAll(true);
                 SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
             }
-            bool canAddSearch = searchText.Trim().Length > 0 && visibleFilterDefs.Count > 0;
+
+            // Search-result buttons
+            bool hasSearchResults = searchText.Trim().Length > 0 && visibleFilterDefs.Count > 0;
             bool previousGuiEnabled = GUI.enabled;
-            GUI.enabled = canAddSearch;
+            GUI.enabled = hasSearchResults;
             var addSearchRect = new Rect(
-                allowRect.xMax + controlsGap,
-                allowRect.y,
-                addSearchButtonWidth,
+                controlsRect.x,
+                clearRect.yMax + controlsGap,
+                leftColumnWidth,
                 lineHeight);
             if (Widgets.ButtonText(addSearchRect, addSearchText))
             {
                 SetAllowVisible(true);
                 SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
             }
+            var removeSearchRect = new Rect(
+                controlsRect.x + leftColumnWidth + controlsGap,
+                addSearchRect.y,
+                rightColumnWidth,
+                lineHeight);
+            if (Widgets.ButtonText(removeSearchRect, removeSearchText))
+            {
+                SetAllowVisible(false);
+                SoundDefOf.Checkbox_TurnedOff.PlayOneShotOnCamera();
+            }
             GUI.enabled = previousGuiEnabled;
 
             float clearButtonWidth = string.IsNullOrEmpty(searchText) ? 0f : searchClearButtonWidth + controlsGap;
             var searchLabelRect = new Rect(
                 controlsRect.x,
-                clearRect.yMax + controlsGap,
+                addSearchRect.yMax + controlsGap,
                 searchLabelWidth,
                 lineHeight);
             Widgets.Label(searchLabelRect, searchLabel);
