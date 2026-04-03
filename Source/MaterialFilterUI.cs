@@ -10,7 +10,9 @@ namespace MaterialFilter
     {
         internal const float PopupGap = 8f;
         internal const float PopupHeight = 480f;
-        internal const float MaterialIconSize = 22f;
+        internal const float MaterialRowHeight = 28f;
+        internal const float MaterialIconInset = 2f;
+        internal const float MaterialIconSize = MaterialRowHeight - MaterialIconInset * 2f;
         internal const float MaterialIconGap = 4f;
 
         private const float ScreenPadding = 12f;
@@ -20,10 +22,11 @@ namespace MaterialFilter
 
         private sealed class MaterialIconData
         {
-            internal Texture2D Texture;
+            internal Texture Texture;
             internal Material Material;
             internal Color Color;
-            internal float Scale;
+            internal float Angle;
+            internal Vector2 IconProportions;
         }
 
         internal static float GetPopupWidth()
@@ -88,7 +91,14 @@ namespace MaterialFilter
 
             Color previousColor = GUI.color;
             GUI.color = iconData.Color;
-            Widgets.DrawTextureFitted(rect, iconData.Texture, iconData.Scale, iconData.Material);
+            Widgets.DrawTextureFitted(
+                rect,
+                iconData.Texture,
+                1f,
+                iconData.IconProportions,
+                new Rect(0f, 0f, 1f, 1f),
+                iconData.Angle,
+                iconData.Material);
             GUI.color = previousColor;
             return true;
         }
@@ -98,19 +108,33 @@ namespace MaterialFilter
             var iconData = new MaterialIconData
             {
                 Color = Color.white,
-                Scale = 1f
+                IconProportions = Vector2.one
             };
 
             try
             {
+                Thing previewThing = ThingMaker.MakeThing(materialDef);
+                previewThing.stackCount = Math.Max(1, materialDef.stackLimit);
+                float angle;
+                Vector2 iconProportions;
+                Color color;
                 Material material;
-                Texture2D texture = Widgets.GetIconFor(materialDef, out material, materialDef);
+                Texture texture = Widgets.GetIconFor(
+                    previewThing,
+                    new Vector2(MaterialIconSize, MaterialIconSize),
+                    null,
+                    false,
+                    out _,
+                    out angle,
+                    out iconProportions,
+                    out color,
+                    out material);
+
                 iconData.Texture = texture;
                 iconData.Material = material;
-                iconData.Color = material != null
-                    ? Color.white
-                    : materialDef.GetColorForStuff(materialDef);
-                iconData.Scale = GenUI.IconDrawScale(materialDef);
+                iconData.Color = color;
+                iconData.Angle = angle;
+                iconData.IconProportions = iconProportions;
             }
             catch (Exception ex)
             {

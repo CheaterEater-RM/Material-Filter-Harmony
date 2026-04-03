@@ -105,7 +105,7 @@ namespace MaterialFilter
 
         public override void DoWindowContents(Rect rect)
         {
-            const float lineHeight = 25f;
+            float lineHeight = MaterialFilterUI.MaterialRowHeight;
             const float indent = 5f;
             const float padding = 5f;
             const float sectionBorder = 1f;
@@ -238,7 +238,7 @@ namespace MaterialFilter
                 float checkboxX = labelX + longestFilterName + padding;
                 var iconRect = new Rect(
                     indent,
-                    curY + (lineHeight - MaterialFilterUI.MaterialIconSize) / 2f,
+                    curY + MaterialFilterUI.MaterialIconInset,
                     MaterialFilterUI.MaterialIconSize,
                     MaterialFilterUI.MaterialIconSize);
                 var labelRect = new Rect(labelX, curY, longestFilterName + padding, lineHeight);

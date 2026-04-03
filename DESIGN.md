@@ -14,7 +14,7 @@ The generated filters are hidden from the vanilla `ThingFilterUI` via a prefix p
 
 ### Filter Window
 
-A custom `MaterialFilterWindow` (subclass of `Window`) displays all material filters as a scrollable checklist with Clear All / Allow All buttons and a search field. The window is opened by injected filter buttons and clamps itself to the visible screen so it stays usable near edges and at different UI scales.
+A custom `MaterialFilterWindow` (subclass of `Window`) displays all material filters as a scrollable checklist with Clear All / Allow All buttons, a search field, and native in-game material icons. The window is opened by injected filter buttons and clamps itself to the visible screen so it stays usable near edges and at different UI scales.
 
 ## Architecture
 
@@ -57,6 +57,7 @@ The original mod created hundreds of `AssemblyBuilder` + `TypeBuilder` instances
 - Filter label widths are measured each frame (required since `Text.CalcSize` depends on current font settings) but uses a simple loop with no allocations
 - Scroll view uses indexed for-loop instead of foreach to avoid enumerator allocation
 - Search only filters which rows are displayed; it does not modify the underlying allow state until the user toggles a checkbox or uses the bulk buttons
+- Material rows resolve icons through RimWorld's own item icon pipeline and cache the result per material ThingDef
 
 ## Implementation Notes
 
