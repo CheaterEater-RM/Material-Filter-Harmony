@@ -121,6 +121,122 @@ namespace MaterialFilter
             materialDef = null;
             return false;
         }
+
+        internal static bool IsGeneratedMaterialFilter(SpecialThingFilterDef filterDef)
+        {
+            return filterDef != null
+                   && GeneratedFilterMaterials != null
+                   && GeneratedFilterMaterials.ContainsKey(filterDef);
+        }
+    }
+
+    [HarmonyPatch(typeof(ThingFilter), nameof(ThingFilter.ExposeData))]
+    internal static class ThingFilter_ExposeData_Patch
+    {
+        private const string MaterialFilterDisallowedNode = "materialFilterDisallowed";
+
+        private static readonly AccessTools.FieldRef<ThingFilter, List<SpecialThingFilterDef>>
+            DisallowedSpecialFiltersRef =
+                AccessTools.FieldRefAccess<ThingFilter, List<SpecialThingFilterDef>>("disallowedSpecialFilters");
+
+        private static readonly Dictionary<ThingFilter, List<SpecialThingFilterDef>>
+            SavedDisallowedSpecialFilters = new Dictionary<ThingFilter, List<SpecialThingFilterDef>>();
+
+        [HarmonyPrefix]
+        private static void Prefix(ThingFilter __instance)
+        {
+            if (Scribe.mode != LoadSaveMode.Saving)
+            {
+                return;
+            }
+
+            List<SpecialThingFilterDef> disallowedSpecialFilters = DisallowedSpecialFiltersRef(__instance);
+            if (disallowedSpecialFilters == null || disallowedSpecialFilters.Count == 0)
+            {
+                return;
+            }
+
+            disallowedSpecialFilters.RemoveAll(filterDef => filterDef == null);
+
+            List<SpecialThingFilterDef> strippedFilters = disallowedSpecialFilters
+                .Where(filterDef => !MaterialFilter_Init.IsGeneratedMaterialFilter(filterDef))
+                .ToList();
+
+            if (strippedFilters.Count == disallowedSpecialFilters.Count)
+            {
+                return;
+            }
+
+            SavedDisallowedSpecialFilters[__instance] = disallowedSpecialFilters;
+            DisallowedSpecialFiltersRef(__instance) = strippedFilters;
+        }
+
+        [HarmonyPostfix]
+        private static void Postfix(ThingFilter __instance)
+        {
+            List<SpecialThingFilterDef> disallowedSpecialFilters = DisallowedSpecialFiltersRef(__instance)
+                ?? new List<SpecialThingFilterDef>();
+            bool removedNulls = disallowedSpecialFilters.RemoveAll(filterDef => filterDef == null) > 0;
+            List<string> materialFilterDefNames = null;
+
+            if (Scribe.mode == LoadSaveMode.Saving)
+            {
+                if (SavedDisallowedSpecialFilters.TryGetValue(__instance, out List<SpecialThingFilterDef> savedFilters))
+                {
+                    materialFilterDefNames = GetMaterialFilterDefNames(savedFilters);
+                }
+                else
+                {
+                    materialFilterDefNames = GetMaterialFilterDefNames(disallowedSpecialFilters);
+                }
+            }
+
+            Scribe_Collections.Look(ref materialFilterDefNames, MaterialFilterDisallowedNode, LookMode.Value);
+
+            if (Scribe.mode == LoadSaveMode.LoadingVars && materialFilterDefNames != null)
+            {
+                for (int i = 0; i < materialFilterDefNames.Count; i++)
+                {
+                    string filterDefName = materialFilterDefNames[i];
+                    SpecialThingFilterDef filterDef = DefDatabase<SpecialThingFilterDef>
+                        .GetNamedSilentFail(filterDefName);
+
+                    if (MaterialFilter_Init.IsGeneratedMaterialFilter(filterDef)
+                        && !disallowedSpecialFilters.Contains(filterDef))
+                    {
+                        disallowedSpecialFilters.Add(filterDef);
+                    }
+                }
+
+                DisallowedSpecialFiltersRef(__instance) = disallowedSpecialFilters;
+            }
+            else if (removedNulls)
+            {
+                DisallowedSpecialFiltersRef(__instance) = disallowedSpecialFilters;
+            }
+
+            if (Scribe.mode == LoadSaveMode.Saving
+                && SavedDisallowedSpecialFilters.TryGetValue(__instance, out List<SpecialThingFilterDef> originalFilters))
+            {
+                DisallowedSpecialFiltersRef(__instance) = originalFilters;
+                SavedDisallowedSpecialFilters.Remove(__instance);
+            }
+        }
+
+        private static List<string> GetMaterialFilterDefNames(
+            List<SpecialThingFilterDef> disallowedSpecialFilters)
+        {
+            if (disallowedSpecialFilters == null || disallowedSpecialFilters.Count == 0)
+            {
+                return null;
+            }
+
+            return disallowedSpecialFilters
+                .Where(MaterialFilter_Init.IsGeneratedMaterialFilter)
+                .Select(filterDef => filterDef.defName)
+                .Distinct()
+                .ToList();
+        }
     }
 
     /// <summary>
