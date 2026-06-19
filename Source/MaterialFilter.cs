@@ -26,6 +26,13 @@ namespace MaterialFilter
 
         internal static Dictionary<ThingDef, SpecialThingFilterDef> MaterialFilterDefsByThingDef;
 
+        // True when Precision Stockpile Control is loaded. Detected once by type probe (no hard
+        // reference, load-order-independent — all assemblies load before any static ctor runs). PSC
+        // adds its own controls to the storage tab's top row, so when it is present we move our
+        // "filter>>" button down beside PSC's button instead of overlapping its letter box.
+        internal static readonly bool PscActive =
+            AccessTools.TypeByName("PrecisionStockpileControl.ITab_Storage_FillTab_Patch") != null;
+
         static MaterialFilter_Init()
         {
             GenerateFilterDefs();

@@ -15,6 +15,13 @@ namespace MaterialFilter.Patches
     [HarmonyPatch(typeof(ITab_Storage), "FillTab")]
     public static class ITab_Storage_FillTab_Patch
     {
+        private const float StandaloneButtonY = 10f;
+        private const float StandaloneButtonHeight = 29f;
+        private const float PscButtonY = 45f;
+        private const float PscButtonHeight = 24f;
+        private const float ButtonRightMargin = 30f;
+        private const float ButtonMinWidth = 80f;
+
         private static readonly PropertyInfo SelStoreSettingsParentProperty =
             AccessTools.Property(typeof(ITab_Storage), "SelStoreSettingsParent");
 
@@ -57,14 +64,21 @@ namespace MaterialFilter.Patches
             }
 
             string buttonLabel = "MaterialFilter_FilterButton".Translate() + ">>";
-            var buttonSize = new Vector2(MaterialFilterUI.GetButtonWidth(buttonLabel, 80f), 29f);
+
+            // With PSC present, drop the button to the second row (beside PSC's entry button, in the
+            // strip PSC reserves under the priority row) so it clears PSC's letter box on the top
+            // row. The widened storage tab leaves room for it right of PSC's button. Standalone, the
+            // button stays on the top row exactly as before.
+            float buttonY = MaterialFilter_Init.PscActive ? PscButtonY : StandaloneButtonY;
+            float buttonHeight = MaterialFilter_Init.PscActive ? PscButtonHeight : StandaloneButtonHeight;
+            var buttonSize = new Vector2(MaterialFilterUI.GetButtonWidth(buttonLabel, ButtonMinWidth), buttonHeight);
             var buttonRect = new Rect(
-                ___WinSize.x - buttonSize.x - 30f,
-                10f,
+                ___WinSize.x - buttonSize.x - ButtonRightMargin,
+                buttonY,
                 buttonSize.x,
                 buttonSize.y);
             var buttonScreenRect = new Rect(
-                tabRect.xMax - buttonSize.x - 30f,
+                tabRect.xMax - buttonSize.x - ButtonRightMargin,
                 tabRect.y + buttonRect.y,
                 buttonSize.x,
                 buttonSize.y);
