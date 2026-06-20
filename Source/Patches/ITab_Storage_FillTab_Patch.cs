@@ -15,11 +15,13 @@ namespace MaterialFilter.Patches
     [HarmonyPatch(typeof(ITab_Storage), "FillTab")]
     public static class ITab_Storage_FillTab_Patch
     {
-        private const float StandaloneButtonY = 10f;
-        private const float StandaloneButtonHeight = 29f;
-        private const float PscButtonY = 45f;
-        private const float PscButtonHeight = 24f;
+        private const float ButtonY = 10f;
+        private const float ButtonHeight = 29f;
         private const float ButtonRightMargin = 30f;
+        // With PSC present the button sits on the SAME top row as PSC's priority/letter controls, so
+        // shift it further left of the X close button to leave a clear gap on both sides (PSC's letter
+        // box ends ~x=216 on the 360px-wide tab; the X sits at the right edge).
+        private const float PscButtonRightMargin = 46f;
         private const float ButtonMinWidth = 80f;
 
         private static readonly PropertyInfo SelStoreSettingsParentProperty =
@@ -65,20 +67,19 @@ namespace MaterialFilter.Patches
 
             string buttonLabel = "MaterialFilter_FilterButton".Translate() + ">>";
 
-            // With PSC present, drop the button to the second row (beside PSC's entry button, in the
-            // strip PSC reserves under the priority row) so it clears PSC's letter box on the top
-            // row. The widened storage tab leaves room for it right of PSC's button. Standalone, the
-            // button stays on the top row exactly as before.
-            float buttonY = MaterialFilter_Init.PscActive ? PscButtonY : StandaloneButtonY;
-            float buttonHeight = MaterialFilter_Init.PscActive ? PscButtonHeight : StandaloneButtonHeight;
-            var buttonSize = new Vector2(MaterialFilterUI.GetButtonWidth(buttonLabel, ButtonMinWidth), buttonHeight);
+            // The button always lives on the top row. With PSC present, PSC's widened tab leaves room
+            // for it in the gap between PSC's priority/letter controls (left) and the X close button
+            // (right); the larger right margin keeps it clear of both. Standalone, it stays exactly
+            // where it always was.
+            float rightMargin = MaterialFilter_Init.PscActive ? PscButtonRightMargin : ButtonRightMargin;
+            var buttonSize = new Vector2(MaterialFilterUI.GetButtonWidth(buttonLabel, ButtonMinWidth), ButtonHeight);
             var buttonRect = new Rect(
-                ___WinSize.x - buttonSize.x - ButtonRightMargin,
-                buttonY,
+                ___WinSize.x - buttonSize.x - rightMargin,
+                ButtonY,
                 buttonSize.x,
                 buttonSize.y);
             var buttonScreenRect = new Rect(
-                tabRect.xMax - buttonSize.x - ButtonRightMargin,
+                tabRect.xMax - buttonSize.x - rightMargin,
                 tabRect.y + buttonRect.y,
                 buttonSize.x,
                 buttonSize.y);
