@@ -44,6 +44,11 @@ namespace MaterialFilter.Patches
             if (settings == null)
                 return;
 
+            // Hide on storage that can never hold apparel/weapons (the only things material
+            // filtering affects), plus any player-listed defNames.
+            if (MaterialFilterStorageButtonFilter.ShouldHide(parent))
+                return;
+
             ThingFilter filter = settings.filter;
 
             // Get the tab rect to position the popup window.
