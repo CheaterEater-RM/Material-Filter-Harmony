@@ -6,4 +6,11 @@
   <MaterialFilter_RemoveSearch>Suche entfernen</MaterialFilter_RemoveSearch>
   <MaterialFilter_SearchLabel>Suche</MaterialFilter_SearchLabel>
   <MaterialFilter_NoResults>Keine passenden Materialien gefunden.</MaterialFilter_NoResults>
+
+  <!-- Mod settings -->
+  <MaterialFilter_SettingsCategory>Material Filter</MaterialFilter_SettingsCategory>
+  <MaterialFilter_SettingsStorageButtonHeader>Button visibility</MaterialFilter_SettingsStorageButtonHeader>
+  <MaterialFilter_SettingsHideButtonUseless>Hide where it can't do anything</MaterialFilter_SettingsHideButtonUseless>
+  <MaterialFilter_SettingsHideButtonUselessTip>Material filtering only affects apparel and weapons. Hide the Filter button on storage that can never hold either - bookcases, graves, food and feedstock containers, shell racks, gene banks, and the same kinds of modded storage. Weapon racks, apparel lockers, and general storage keep the button. On by default.</MaterialFilter_SettingsHideButtonUselessTip>
+  <MaterialFilter_SettingsExtraExcludedLabel>Also hide on these storage defNames (one per line, exact and case-sensitive):</MaterialFilter_SettingsExtraExcludedLabel>
 </LanguageData>
